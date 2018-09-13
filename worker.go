@@ -34,8 +34,6 @@ func (w *worker) run() {
 					return
 				}
 
-				fmt.Printf("%v", item)
-
 				w.handler(item)
 			}
 		}
