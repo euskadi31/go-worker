@@ -5,7 +5,6 @@
 package worker
 
 import (
-	"fmt"
 	"sync"
 )
 
