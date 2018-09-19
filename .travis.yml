@@ -9,7 +9,7 @@ go:
   - tip
 
 env:
-  - GO111MODULE=auto
+  - GO111MODULE=on
 
 matrix:
   fast_finish: true
@@ -20,7 +20,7 @@ matrix:
 cache: apt
 
 install:
-  - go get github.com/mattn/goveralls
+  - GO111MODULE=auto go get github.com/mattn/goveralls
 
 script:
   - make travis
