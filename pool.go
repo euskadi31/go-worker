@@ -7,6 +7,8 @@ package worker
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 // Errors messages
@@ -32,7 +34,7 @@ type pool struct {
 	queueSize  int
 	handler    Handler
 	queue      chan interface{}
-	closed     bool
+	closed     int32
 	workers    []*worker
 	wg         sync.WaitGroup
 }
@@ -74,7 +76,7 @@ func (p *pool) QueueLength() int {
 }
 
 func (p *pool) Enqueue(payload interface{}) error {
-	if p.closed {
+	if atomic.LoadInt32(&p.closed) != 0 {
 		return ErrPoolClosed
 	}
 
@@ -83,12 +85,30 @@ func (p *pool) Enqueue(payload interface{}) error {
 	return nil
 }
 
-func (p *pool) Close() {
-	p.closed = true
+func (p *pool) clean() {
+	for _, w := range p.workers {
+		w.close()
+	}
+}
 
-	close(p.queue)
+func (p *pool) Close() {
+	atomic.StoreInt32(&p.closed, int32(1))
+
+	ticker := time.NewTicker(100 * time.Millisecond)
+
+	for range ticker.C {
+		if len(p.queue) == 0 {
+			p.clean()
+
+			ticker.Stop()
+
+			break
+		}
+	}
 
 	p.wg.Wait()
 
 	p.workers = make([]*worker, 0, p.workerSize)
+
+	close(p.queue)
 }

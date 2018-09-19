@@ -1,4 +1,4 @@
-.PHONY: all clean test cover release over-html
+.PHONY: release all test race cover cover-html clean travis
 
 release:
 	@echo "Release v$(version)"
@@ -20,6 +20,9 @@ coverage.out: $(shell find . -type f -print | grep -v vendor | grep "\.go")
 
 test: coverage.out
 
+race: $(shell find . -type f -print | grep -v vendor | grep "\.go")
+	@go test -race ./...
+
 cover: coverage.out
 	@echo ""
 	@go tool cover -func ./coverage.out
@@ -30,3 +33,5 @@ cover-html: coverage.out
 clean:
 	@rm ./coverage.out
 	@go clean -i ./...
+
+travis: race coverage.out

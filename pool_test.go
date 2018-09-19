@@ -6,7 +6,10 @@ package worker
 
 import (
 	"runtime"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,10 +17,15 @@ import (
 func TestPool(t *testing.T) {
 	gr := runtime.NumGoroutine()
 
-	i := 0
+	var wg sync.WaitGroup
 
+	i := int64(0)
+
+	wg.Add(5)
 	p := New(2, 4, func(payload interface{}) {
-		i += payload.(int)
+		defer wg.Done()
+
+		atomic.AddInt64(&i, int64(payload.(int)))
 	})
 
 	assert.Equal(t, 2, p.WorkerSize())
@@ -46,7 +54,45 @@ func TestPool(t *testing.T) {
 	err = p.Enqueue(1)
 	assert.Error(t, err)
 
-	assert.Equal(t, 5, i)
+	wg.Wait()
+
+	assert.Equal(t, int64(5), i)
+
+	// check gorouting leak
+	assert.Equal(t, gr, runtime.NumGoroutine())
+}
+
+func TestPoolClose(t *testing.T) {
+	gr := runtime.NumGoroutine()
+
+	i := int64(0)
+
+	p := New(2, 400, func(payload interface{}) {
+		atomic.AddInt64(&i, int64(payload.(int)))
+	})
+
+	p.Start()
+
+	go func() {
+		for index := 0; index < 500000; index++ {
+			p.Enqueue(index)
+		}
+	}()
+
+	go func() {
+		for index := 500001; index < 1000000; index++ {
+			p.Enqueue(index)
+		}
+	}()
+
+	timber := time.NewTimer(1 * time.Second)
+
+	<-timber.C
+
+	p.Close()
+
+	assert.True(t, i != 0)
+	assert.False(t, i == 100000)
 
 	// check gorouting leak
 	assert.Equal(t, gr, runtime.NumGoroutine())

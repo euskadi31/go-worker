@@ -9,16 +9,18 @@ import (
 )
 
 type worker struct {
-	queue   <-chan interface{}
-	handler Handler
-	wg      *sync.WaitGroup
+	queue    <-chan interface{}
+	handler  Handler
+	wg       *sync.WaitGroup
+	shutdown chan struct{}
 }
 
 func newWorker(queue <-chan interface{}, wg *sync.WaitGroup, handler Handler) *worker {
 	return &worker{
-		queue:   queue,
-		handler: handler,
-		wg:      wg,
+		queue:    queue,
+		handler:  handler,
+		wg:       wg,
+		shutdown: make(chan struct{}, 1),
 	}
 }
 
@@ -29,12 +31,14 @@ func (w *worker) run() {
 		for {
 			select {
 			case item := <-w.queue:
-				if item == nil {
-					return
-				}
-
 				w.handler(item)
+			case <-w.shutdown:
+				return
 			}
 		}
 	}()
+}
+
+func (w *worker) close() {
+	w.shutdown <- struct{}{}
 }

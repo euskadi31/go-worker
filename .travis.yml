@@ -23,7 +23,7 @@ install:
   - go get github.com/mattn/goveralls
 
 script:
-  - make test
+  - make travis
 
 after_success:
   - goveralls -coverprofile=coverage.out -service=travis-ci

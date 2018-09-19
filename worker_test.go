@@ -31,6 +31,8 @@ func TestWorker(t *testing.T) {
 
 	queue <- "foo"
 
+	w.close()
+
 	close(queue)
 
 	wg.Wait()
