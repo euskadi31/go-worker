@@ -84,9 +84,9 @@ func (p *pool) Enqueue(payload interface{}) error {
 }
 
 func (p *pool) Close() {
-	close(p.queue)
-
 	p.closed = true
+
+	close(p.queue)
 
 	p.wg.Wait()
 
