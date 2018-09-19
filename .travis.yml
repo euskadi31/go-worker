@@ -9,7 +9,7 @@ go:
   - tip
 
 env:
-  - GO111MODULE=on
+  - GO111MODULE=auto
 
 matrix:
   fast_finish: true
