@@ -1,5 +1,6 @@
 .PHONY: release all test race cover cover-html clean travis
 
+.PHONY: release
 release:
 	@echo "Release v$(version)"
 	@git pull
@@ -11,27 +12,41 @@ release:
 	@git checkout develop
 	@echo "Release v$(version) finished."
 
+.PHONY: all
 all: coverage.out
 
 coverage.out: $(shell find . -type f -print | grep -v vendor | grep "\.go")
-	@go test -cover -coverprofile ./coverage.out.tmp ./...
+	@CGO_ENABLED=0 go test -race -cover -covermode=count -coverprofile ./coverage.out.tmp ./...
 	@cat ./coverage.out.tmp | grep -v '.pb.go' | grep -v 'mock_' > ./coverage.out
 	@rm ./coverage.out.tmp
 
+.PHONY: test
 test: coverage.out
 
-race: $(shell find . -type f -print | grep -v vendor | grep "\.go")
-	@go test -race ./...
-
+.PHONY: cover
 cover: coverage.out
 	@echo ""
 	@go tool cover -func ./coverage.out
 
+.PHONY: cover-html
 cover-html: coverage.out
 	@go tool cover -html=./coverage.out
 
+.PHONY: benchmark
+benchmark:
+	@go test -bench=. ./...
+
+.PHONY: clean
 clean:
 	@rm ./coverage.out
 	@go clean -i ./...
+
+.PHONY: generate
+generate:
+	@CGO_ENABLED=0 go generate ./...
+
+.PHONY: lint
+lint:
+	@CGO_ENABLED=0 golangci-lint run ./...
 
 travis: race coverage.out
