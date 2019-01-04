@@ -16,7 +16,7 @@ release:
 all: coverage.out
 
 coverage.out: $(shell find . -type f -print | grep -v vendor | grep "\.go")
-	@CGO_ENABLED=0 go test -race -cover -covermode=count -coverprofile ./coverage.out.tmp ./...
+	@go test -race -cover -covermode=atomic -coverprofile ./coverage.out.tmp ./...
 	@cat ./coverage.out.tmp | grep -v '.pb.go' | grep -v 'mock_' > ./coverage.out
 	@rm ./coverage.out.tmp
 
