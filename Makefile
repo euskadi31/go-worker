@@ -1,5 +1,3 @@
-.PHONY: release all test race cover cover-html clean travis
-
 .PHONY: release
 release:
 	@echo "Release v$(version)"
@@ -49,4 +47,3 @@ generate:
 lint:
 	@CGO_ENABLED=0 golangci-lint run ./...
 
-travis: race coverage.out
