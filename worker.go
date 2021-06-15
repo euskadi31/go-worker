@@ -31,7 +31,9 @@ func (w *worker) run() {
 		for {
 			select {
 			case item := <-w.queue:
-				w.handler(item)
+				if item != nil {
+					w.handler(item)
+				}
 			case <-w.shutdown:
 				return
 			}
