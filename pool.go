@@ -11,12 +11,12 @@ import (
 	"time"
 )
 
-// Errors messages
+// Errors messages.
 var (
 	ErrPoolClosed = errors.New("pool is closed")
 )
 
-// Pool interface
+// Pool interface.
 type Pool interface {
 	WorkerSize() int
 	QueueSize() int
@@ -26,7 +26,7 @@ type Pool interface {
 	Close()
 }
 
-// Handler of worker
+// Handler of worker.
 type Handler func(payload interface{})
 
 type pool struct {
@@ -39,7 +39,7 @@ type pool struct {
 	wg         sync.WaitGroup
 }
 
-// New pool worker
+// New pool worker.
 func New(workerSize int, queueSize int, handler Handler) Pool {
 	return &pool{
 		workerSize: workerSize,
@@ -62,7 +62,7 @@ func (p *pool) Start() {
 	}
 }
 
-// WorkerSize retruns number of worker
+// WorkerSize retruns number of worker.
 func (p *pool) WorkerSize() int {
 	return p.workerSize
 }
